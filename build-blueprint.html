@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI GitHub Analyzer — Build Blueprint</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap');
+
+  :root{
+    --bg:#0e3157;
+    --bg-deep:#0a2542;
+    --bg-panel:#123a63;
+    --grid:rgba(255,255,255,0.06);
+    --grid-strong:rgba(255,255,255,0.16);
+    --ink:#e6f0fb;
+    --ink-dim:#8fb0d9;
+    --ink-faint:#5f83ab;
+    --redline:#ff5a36;
+    --redline-dim:rgba(255,90,54,0.14);
+    --done:#4ade80;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg, var(--grid) 0px, var(--grid) 1px, transparent 1px, transparent 32px),
+      repeating-linear-gradient(90deg, var(--grid) 0px, var(--grid) 1px, transparent 1px, transparent 32px);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    padding:24px 16px 80px;
+  }
+  .page{max-width:920px;margin:0 auto;}
+
+  /* ---------- Title block ---------- */
+  .titleblock{
+    border:2px solid var(--ink-dim);
+    background:var(--bg-deep);
+    padding:20px 22px;
+    margin-bottom:28px;
+    position:relative;
+  }
+  .titleblock::before{
+    content:'';
+    position:absolute; inset:6px;
+    border:1px dashed var(--grid-strong);
+    pointer-events:none;
+  }
+  .titleblock .eyebrow{
+    font-family:'IBM Plex Mono';
+    font-size:11px;
+    letter-spacing:2px;
+    color:var(--redline);
+    text-transform:uppercase;
+  }
+  .titleblock h1{
+    font-family:'IBM Plex Sans Condensed';
+    font-weight:700;
+    font-size:clamp(22px,4.5vw,32px);
+    margin:6px 0 14px;
+    letter-spacing:0.3px;
+  }
+  .tb-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    font-family:'IBM Plex Mono';
+    font-size:11px;
+    border-top:1px solid var(--grid-strong);
+    padding-top:12px;
+  }
+  .tb-grid div span{display:block;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;font-size:9px;margin-bottom:3px;}
+  .tb-grid div b{color:var(--ink);font-weight:600;}
+  @media(max-width:600px){.tb-grid{grid-template-columns:repeat(2,1fr);}}
+
+  /* ---------- Principles ---------- */
+  .principles{
+    background:var(--bg-panel);
+    border:1px solid var(--grid-strong);
+    padding:18px 20px;
+    margin-bottom:24px;
+  }
+  .principles h2, .section-heading{
+    font-family:'IBM Plex Sans Condensed';
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 12px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-heading::after{content:'';flex:1;height:1px;background:var(--grid-strong);}
+  .principles ol{margin:0;padding-left:20px;}
+  .principles li{margin-bottom:8px;font-size:14.5px;}
+  .principles li b{color:var(--ink);}
+  .principles .note{
+    margin-top:12px;font-size:12.5px;color:var(--ink-faint);
+    font-family:'IBM Plex Mono';border-top:1px dashed var(--grid-strong);padding-top:10px;
+  }
+
+  /* ---------- Progress bar ---------- */
+  .progress{
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:32px; flex-wrap:wrap;
+  }
+  .progress-track{
+    flex:1; min-width:160px; height:10px; background:var(--bg-deep);
+    border:1px solid var(--grid-strong); position:relative; overflow:hidden;
+  }
+  .progress-fill{height:100%; width:0%; background:var(--done); transition:width .3s ease;}
+  .progress-label{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-dim); white-space:nowrap;}
+  .reset-btn{
+    font-family:'IBM Plex Mono'; font-size:11px; color:var(--ink-faint);
+    background:transparent;border:1px solid var(--grid-strong); padding:6px 10px;cursor:pointer;
+  }
+  .reset-btn:hover{color:var(--redline); border-color:var(--redline);}
+
+  /* ---------- Roadmap ---------- */
+  .roadmap{position:relative; padding-left:6px;}
+  .roadmap::before{
+    content:''; position:absolute; left:27px; top:8px; bottom:8px; width:2px;
+    background:repeating-linear-gradient(180deg, var(--grid-strong) 0 6px, transparent 6px 12px);
+  }
+  .phase{position:relative; margin-left:58px; margin-bottom:36px;}
+  .phase-marker{
+    position:absolute; left:-58px; top:0; width:38px; height:38px; border-radius:50%;
+    border:2px solid var(--ink-dim); background:var(--bg-deep);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono'; font-weight:600; font-size:14px; color:var(--ink);
+  }
+  .phase.done .phase-marker{border-color:var(--done); color:var(--done);}
+  .phase-head{margin-bottom:4px;}
+  .phase-num{font-family:'IBM Plex Mono'; font-size:11px; color:var(--redline); letter-spacing:1px;}
+  .phase-title{font-family:'IBM Plex Sans Condensed'; font-weight:700; font-size:19px; margin:2px 0 4px;}
+  .phase-goal{font-size:13px; color:var(--ink-dim); margin-bottom:12px; font-style:italic;}
+  .feature-list{border-left:2px solid var(--grid-strong); padding-left:16px;}
+  .feature{
+    display:flex; align-items:flex-start; gap:10px; padding:8px 0;
+    border-bottom:1px dashed var(--grid);
+  }
+  .feature:last-child{border-bottom:none;}
+  .feature input[type=checkbox]{
+    margin-top:3px; width:16px;height:16px; accent-color:var(--done); cursor:pointer; flex-shrink:0;
+  }
+  .feature-text{font-size:13.5px; flex:1;}
+  .feature-text b{color:var(--ink);}
+  .commit-tag{
+    font-family:'Caveat'; font-weight:700; font-size:17px; color:var(--redline);
+    display:block; transform:rotate(-1.2deg); margin-top:2px;
+  }
+  .commit-tag::before{content:'↳ commit: ';font-family:'IBM Plex Mono'; font-size:10px; color:var(--redline); font-weight:400;}
+  label.feature{cursor:pointer;}
+  label.feature:has(input:checked) .feature-text{color:var(--ink-faint); text-decoration:line-through; text-decoration-color:var(--grid-strong);}
+
+  /* ---------- Milestones table ---------- */
+  .milestones{margin:36px 0;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th,td{border:1px solid var(--grid-strong); padding:8px 10px; text-align:left;}
+  th{font-family:'IBM Plex Mono'; font-size:11px; text-transform:uppercase; color:var(--redline); letter-spacing:1px; background:var(--bg-deep);}
+  td:first-child{font-family:'IBM Plex Mono'; color:var(--ink-dim); width:40px;}
+
+  /* ---------- Day 1 callout ---------- */
+  .day1{
+    background:var(--redline-dim); border:2px solid var(--redline);
+    padding:20px 22px; margin:32px 0; position:relative;
+  }
+  .day1 .stamp{
+    position:absolute; top:-14px; right:16px; background:var(--redline); color:var(--bg-deep);
+    font-family:'IBM Plex Mono'; font-weight:700; font-size:11px; letter-spacing:1px;
+    padding:4px 10px; transform:rotate(2deg);
+  }
+  .day1 h2{margin-top:0;color:var(--redline);}
+  .day1 ol{padding-left:20px; margin:0;}
+  .day1 li{margin-bottom:6px; font-size:14px;}
+
+  footer{margin-top:40px; font-family:'IBM Plex Mono'; font-size:11px; color:var(--ink-faint); text-align:center;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="titleblock">
+    <div class="eyebrow">Development Blueprint — Sheet 1 of 1</div>
+    <h1>AI-Powered GitHub Repository Analyzer</h1>
+    <div class="tb-grid">
+      <div><span>Doc Type</span><b>Phased Build Plan (RAG System)</b></div>
+      <div><span>Method</span><b>Incremental / Milestone-Driven</b></div>
+      <div><span>Drawn By</span><b>Shandilya</b></div>
+      <div><span>Rev</span><b>1.0 — 24 Jul 2026</b></div>
+    </div>
+  </header>
+
+  <section class="principles">
+    <h2>How Professionals Actually Build This</h2>
+    <ol>
+      <li><b>Ship a working app after every phase</b> — never a stack of half-built layers. If it doesn't run end-to-end, the phase isn't done.</li>
+      <li><b>Build only what the current milestone needs</b> — no future-proofing for Phase 8 while you're on Phase 2.</li>
+      <li><b>Test in isolation before moving on</b> — prove the one function works before it becomes a dependency for the next one.</li>
+      <li><b>Commit with a message that describes what shipped</b>, not what you attempted. Each commit below is a real checkpoint, not busywork.</li>
+      <li><b>One milestone = one demoable capability</b> — something you could open right now and show an interviewer, not a folder of stubs.</li>
+    </ol>
+    <div class="note">This structure isn't specific to RAG apps — it's the same phase → feature → test → commit loop used for any real IT project: web app, ML pipeline, mobile app, internal tool. The project below is the worked example.</div>
+  </section>
+
+  <div class="progress">
+    <span class="progress-label">Progress <b id="progress-count">0 / 0</b></span>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <span class="progress-label" id="progress-pct">0%</span>
+    <button class="reset-btn" onclick="resetProgress()">Reset checklist</button>
+  </div>
+
+  <section class="roadmap">
+
+    <!-- PHASE 1 -->
+    <div class="phase" data-phase="1">
+      <div class="phase-marker">01</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 1 · REPOSITORY MANAGEMENT</div>
+        <div class="phase-title">Ingestion Engine</div>
+        <div class="phase-goal">Goal: accept a GitHub URL, clone it, read it, report on it. Zero AI. Zero LLM.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p1f1"><span class="feature-text"><b>Project Setup</b> — app.py, config.py, .env, requirements.txt · install fastapi, uvicorn, gitpython, python-dotenv<span class="commit-tag">"Initial Project Setup"</span></span></label>
+        <label class="feature"><input type="checkbox" data-id="p1f2"><span class="feature-text"><b>Clone Repository</b> — clone_repository(url); handle invalid URL, already-exists, private repo, network error<span class="commit-tag">"Implemented Repository Cloning"</span></span></label>
+        <label class="feature"><input type="checkbox" data-id="p1f3"><span class="feature-text"><b>Repository Scanner</b> — scan_repository(path); ignore .git, node_modules, venv, dist, build<span class="commit-tag">"Repository Scanner Completed"</span></span></label>
+        <label class="feature"><input type="checkbox" data-id="p1f4"><span class="feature-text"><b>Read Files</b> — read_file(path) returns filename, path, extension, content<span class="commit-tag">"Implemented File Reader"</span></span></label>
+        <label class="feature"><input type="checkbox" data-id="p1f5"><span class="feature-text"><b>Repository Statistics</b> — total files, language breakdown, largest file, repo size<span class="commit-tag">"Repository Analyzer Completed"</span></span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="phase" data-phase="2">
+      <div class="phase-marker">02</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 2 · INTELLIGENT PARSING</div>
+        <div class="phase-title">Teach It to Read Code</div>
+        <div class="phase-goal">Goal: stop treating files as blobs of text — extract structure.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p2f1"><span class="feature-text"><b>Language Detection</b> — Python, Java, C++, Markdown</span></label>
+        <label class="feature"><input type="checkbox" data-id="p2f2"><span class="feature-text"><b>Python Parser</b> — use <code>ast</code> to extract classes, functions, methods, imports instead of whole files</span></label>
+        <label class="feature"><input type="checkbox" data-id="p2f3"><span class="feature-text"><b>Metadata Builder</b> — each chunk stores filename, path, language, class, function, start_line, end_line</span></label>
+        <label class="feature"><input type="checkbox" data-id="p2f4"><span class="feature-text"><b>Chunk Generator</b> — pipeline: repository → files → chunks (e.g. 1800 files → 6800 chunks)<span class="commit-tag">"Implemented Smart Code Chunking"</span></span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="phase" data-phase="3">
+      <div class="phase-marker">03</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 3 · AI MEMORY</div>
+        <div class="phase-title">Make the Repo Searchable</div>
+        <div class="phase-goal">Goal: turn code chunks into vectors the system can retrieve by meaning.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p3f1"><span class="feature-text"><b>Embedding Service</b> — sentence-transformers; generate_embedding(text) → 384-dim vector</span></label>
+        <label class="feature"><input type="checkbox" data-id="p3f2"><span class="feature-text"><b>ChromaDB</b> — store chunk → vector → metadata; insert / search / delete / update<span class="commit-tag">"Implemented Vector Database"</span></span></label>
+        <label class="feature"><input type="checkbox" data-id="p3f3"><span class="feature-text"><b>Repository Indexer</b> — one-click pipeline: repository → chunk → embed → store<span class="commit-tag">"Repository Indexing Completed"</span></span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="phase" data-phase="4">
+      <div class="phase-marker">04</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 4 · RETRIEVAL</div>
+        <div class="phase-title">Find the Right Chunks</div>
+        <div class="phase-goal">Goal: given a question, surface the code that actually answers it.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p4f1"><span class="feature-text"><b>Retriever</b> — question → embedding → similarity search → top 5 chunks</span></label>
+        <label class="feature"><input type="checkbox" data-id="p4f2"><span class="feature-text"><b>Prompt Builder</b> — assembles repository context + question + instructions<span class="commit-tag">"Retriever Implemented"</span></span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 5 -->
+    <div class="phase" data-phase="5">
+      <div class="phase-marker">05</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 5 · AI CHAT</div>
+        <div class="phase-title">First Working RAG</div>
+        <div class="phase-goal">Goal: a real answer, grounded in retrieved code — this is the milestone that proves the concept.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p5f1"><span class="feature-text"><b>Groq API</b> — ask_llm(question, retrieved_chunks) → answer</span></label>
+        <label class="feature"><input type="checkbox" data-id="p5f2"><span class="feature-text"><b>RAG Chat</b> — full pipeline: question → retriever → prompt → Groq → answer<span class="commit-tag">"First Working RAG"</span></span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 6 -->
+    <div class="phase" data-phase="6">
+      <div class="phase-marker">06</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 6 · FASTAPI</div>
+        <div class="phase-title">Expose It as a Service</div>
+        <div class="phase-goal">Goal: every capability above, reachable over HTTP.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p6f1"><span class="feature-text">POST /clone</span></label>
+        <label class="feature"><input type="checkbox" data-id="p6f2"><span class="feature-text">POST /scan</span></label>
+        <label class="feature"><input type="checkbox" data-id="p6f3"><span class="feature-text">POST /index</span></label>
+        <label class="feature"><input type="checkbox" data-id="p6f4"><span class="feature-text">POST /chat</span></label>
+        <label class="feature"><input type="checkbox" data-id="p6f5"><span class="feature-text">GET /repositories</span></label>
+        <label class="feature"><input type="checkbox" data-id="p6f6"><span class="feature-text">DELETE /repository<span class="commit-tag">"REST API Completed"</span></span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 7 -->
+    <div class="phase" data-phase="7">
+      <div class="phase-marker">07</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 7 · FRONTEND</div>
+        <div class="phase-title">Make It Usable</div>
+        <div class="phase-goal">Goal: a human should never touch the API directly.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p7f1"><span class="feature-text"><b>Home</b> — paste URL → clone</span></label>
+        <label class="feature"><input type="checkbox" data-id="p7f2"><span class="feature-text"><b>Repository Page</b> — statistics, index status, file list</span></label>
+        <label class="feature"><input type="checkbox" data-id="p7f3"><span class="feature-text"><b>Chat Page</b> — ChatGPT-like interface: you → question → AI answer<span class="commit-tag">"Frontend Completed"</span></span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 8 -->
+    <div class="phase" data-phase="8">
+      <div class="phase-marker">08</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 8 · ADVANCED AI</div>
+        <div class="phase-title">This Is What Makes It Look Real, Not a Tutorial Clone</div>
+        <div class="phase-goal">Goal: layer genuinely useful AI features on top of the working core.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p8f1"><span class="feature-text"><b>Explain File</b> — e.g. "Explain utils.py"</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f2"><span class="feature-text"><b>Explain Function</b> — e.g. "Explain login()"</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f3"><span class="feature-text"><b>Architecture Generator</b> — "Explain project architecture"</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f4"><span class="feature-text"><b>Security Review</b> — finds exposed API keys, SQL injection, unsafe code</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f5"><span class="feature-text"><b>Dead Code Detection</b> — unused imports, unused functions, duplicate logic</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f6"><span class="feature-text"><b>README Generator</b> — professional documentation, generated</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f7"><span class="feature-text"><b>Unit Test Generator</b> — pytest / JUnit</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f8"><span class="feature-text"><b>Code Improvement</b> — suggests better algorithms, design, naming</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f9"><span class="feature-text"><b>Dependency Graph</b> — main.py → auth.py → database.py</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f10"><span class="feature-text"><b>Call Graph</b> — main() → login() → validate() → JWT</span></label>
+        <label class="feature"><input type="checkbox" data-id="p8f11"><span class="feature-text"><b>PR Reviewer</b> — paste a pull request, AI reviews and suggests improvements</span></label>
+      </div>
+    </div>
+
+    <!-- PHASE 9 -->
+    <div class="phase" data-phase="9">
+      <div class="phase-marker">09</div>
+      <div class="phase-head">
+        <div class="phase-num">PHASE 9 · DEPLOYMENT</div>
+        <div class="phase-title">Put It Where Someone Can Actually Open It</div>
+        <div class="phase-goal">Goal: a link, not a localhost screenshot.</div>
+      </div>
+      <div class="feature-list">
+        <label class="feature"><input type="checkbox" data-id="p9f1"><span class="feature-text">Dockerize backend + frontend</span></label>
+        <label class="feature"><input type="checkbox" data-id="p9f2"><span class="feature-text">Deploy to Railway (or equivalent)</span></label>
+        <label class="feature"><input type="checkbox" data-id="p9f3"><span class="feature-text">Attach a domain</span></label>
+        <label class="feature"><input type="checkbox" data-id="p9f4"><span class="feature-text">Add to portfolio / resume — link it, don't just name-drop it</span></label>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="milestones">
+    <div class="section-heading">Milestone Tracker</div>
+    <table>
+      <tr><th>#</th><th>What you have when this milestone is done</th></tr>
+      <tr><td>1</td><td>GitHub Repository Downloader</td></tr>
+      <tr><td>2</td><td>Repository Analyzer</td></tr>
+      <tr><td>3</td><td>Smart Code Parser</td></tr>
+      <tr><td>4</td><td>Code Chunk Generator</td></tr>
+      <tr><td>5</td><td>Vector Database</td></tr>
+      <tr><td>6</td><td>Semantic Code Search</td></tr>
+      <tr><td>7</td><td>Working RAG Chat</td></tr>
+      <tr><td>8</td><td>REST API</td></tr>
+      <tr><td>9</td><td>Frontend</td></tr>
+      <tr><td>10</td><td>Production AI GitHub Analyzer</td></tr>
+    </table>
+  </section>
+
+  <div class="day1">
+    <div class="stamp">START HERE</div>
+    <h2>Day 1 — Tomorrow's Coding Target</h2>
+    <ol>
+      <li>Create the project structure</li>
+      <li>Set up the virtual environment</li>
+      <li>Install dependencies</li>
+      <li>Create a configuration module</li>
+      <li>Implement <code>clone_repository(url)</code> with proper error handling</li>
+      <li>Test it by cloning three public repositories successfully</li>
+      <li>Commit to Git with a meaningful commit message</li>
+    </ol>
+  </div>
+
+  <footer>Don't jump to embeddings or the frontend before Phase 1 is clean. That discipline is the difference between a tutorial clone and something you'd defend in an internship interview.</footer>
+
+</div>
+
+<script>
+let state = {};
+
+async function loadState(){
+  try{
+    const res = await window.storage.get('checklist-progress');
+    if(res && res.value){ state = JSON.parse(res.value); }
+  }catch(e){ state = {}; }
+  document.querySelectorAll('input[type=checkbox][data-id]').forEach(cb=>{
+    if(state[cb.dataset.id]){ cb.checked = true; }
+    cb.addEventListener('change', ()=>toggleItem(cb));
+  });
+  updateProgress();
+}
+
+async function toggleItem(cb){
+  state[cb.dataset.id] = cb.checked;
+  updateProgress();
+  try{ await window.storage.set('checklist-progress', JSON.stringify(state), false); }
+  catch(e){ console.error('Storage error', e); }
+}
+
+async function resetProgress(){
+  state = {};
+  document.querySelectorAll('input[type=checkbox][data-id]').forEach(cb=>{ cb.checked = false; });
+  updateProgress();
+  try{ await window.storage.set('checklist-progress', JSON.stringify(state), false); }
+  catch(e){ console.error('Storage error', e); }
+}
+
+function updateProgress(){
+  const all = document.querySelectorAll('input[type=checkbox][data-id]');
+  const done = document.querySelectorAll('input[type=checkbox][data-id]:checked');
+  const pct = all.length ? Math.round(done.length/all.length*100) : 0;
+  document.getElementById('progress-count').textContent = done.length + ' / ' + all.length;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+}
+
+loadState();
+</script>
+</body>
+</html>
