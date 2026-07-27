@@ -1,8 +1,15 @@
+from pathlib import Path
 import chromadb
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+CHROMA_DB_DIR = BASE_DIR / "chroma_db"
+
+CHROMA_DB_DIR.mkdir(exist_ok=True)
 
 
 # Create (or load) the persistent database
-client = chromadb.PersistentClient(path="chroma_db")
+client = chromadb.PersistentClient(path="CHROMA_DB_DIR")
 
 # Create (or load) the collection
 collection = client.get_or_create_collection(
