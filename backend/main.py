@@ -3,6 +3,7 @@ from app.github.scanner import scan_repository
 from app.github.reader import read_file
 from app.rag.chunker import chunk_text
 from app.rag.embeddings import create_embeddings
+from app.rag.vectorstore import store_embeddings
 
 
 def main():
@@ -73,6 +74,9 @@ def main():
     print(embeddings[0][:10])
     print(len(embeddings))
     print(len(embeddings[0]))
+    store_embeddings(chunks, embeddings)
+
+    embeddings = create_embeddings(chunks)
 
 
 if __name__ == "__main__":
