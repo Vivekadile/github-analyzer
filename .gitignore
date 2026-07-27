@@ -37,3 +37,19 @@ backend/repositories/
 
 # ChromaDB (we'll generate this later)
 backend/chroma_db/
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+
+# Environment Variables
+.env
+
+# Cloned Repositories
+repositories/
+
+# ChromaDB
+chroma_db/
