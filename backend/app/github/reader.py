@@ -3,18 +3,20 @@ from pathlib import Path
 
 def read_file(file_path: Path) -> str:
     """
-    Read a source code file.
+    Safely read a source file.
 
     Args:
-        file_path: Path to the source file.
+        file_path: Path of the source file.
 
     Returns:
-        File content as a string.
+        File contents or an empty string if unreadable.
     """
 
-    if not file_path.exists():
-        raise FileNotFoundError(f"File not found: {file_path}")
+    try:
+        return file_path.read_text(
+            encoding="utf-8"
+        )
 
-    content = file_path.read_text(encoding="utf-8")
-
-    return content
+    except (UnicodeDecodeError, OSError):
+        print(f"Skipped unreadable file: {file_path}")
+        return ""

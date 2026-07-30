@@ -1,6 +1,9 @@
 from pathlib import Path
 
+# ---------------------------------------------------------
 # Directories that should not be scanned
+# ---------------------------------------------------------
+
 IGNORE_DIRECTORIES = {
     ".git",
     "__pycache__",
@@ -11,11 +14,17 @@ IGNORE_DIRECTORIES = {
     ".vscode",
     "dist",
     "build",
-    "tests"
-    "test"
+    "tests",
+    "test",
+    "docs",
+    "examples",
+    ".github",
 }
 
-# Source code file extensions supported by the scanner
+# ---------------------------------------------------------
+# Supported source code extensions
+# ---------------------------------------------------------
+
 SUPPORTED_EXTENSIONS = {
     ".py",
     ".java",
@@ -34,6 +43,9 @@ SUPPORTED_EXTENSIONS = {
     ".swift",
 }
 
+# ---------------------------------------------------------
+# Scan Repository
+# ---------------------------------------------------------
 
 def scan_repository(repo_path: Path) -> list[Path]:
     """
@@ -43,7 +55,7 @@ def scan_repository(repo_path: Path) -> list[Path]:
         repo_path: Path to the cloned repository.
 
     Returns:
-        List of source code file paths.
+        List of source code files.
     """
 
     source_files = []
@@ -58,10 +70,10 @@ def scan_repository(repo_path: Path) -> list[Path]:
         if any(part in IGNORE_DIRECTORIES for part in file.parts):
             continue
 
-        # Keep only supported source files
-        if file.suffix in SUPPORTED_EXTENSIONS:
-            source_files.append(file)
+        # Skip unsupported file types
+        if file.suffix.lower() not in SUPPORTED_EXTENSIONS:
+            continue
+
+        source_files.append(file)
 
     return source_files
-
-

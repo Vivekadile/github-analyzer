@@ -1,5 +1,11 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+TEXT_SPLITTER = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200,
+)
+
+
 def chunk_text(text: str) -> list[str]:
     """
     Split source code into smaller chunks.
@@ -12,10 +18,5 @@ def chunk_text(text: str) -> list[str]:
     """
     if not text:
         return []
-    text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200
-    )
-    chunks = text_splitter.split_text(text)
-    return chunks
 
+    return TEXT_SPLITTER.split_text(text)
