@@ -1,8 +1,7 @@
 from app.github.clone import clone_repository
-from app.github.reader import read_file
 from app.github.scanner import scan_repository
+from app.github.reader import read_file
 
-from app.rag.chain import ask_question
 from app.rag.chunker import chunk_text
 from app.rag.embeddings import create_embeddings
 from app.rag.vectorstore import (
@@ -11,21 +10,35 @@ from app.rag.vectorstore import (
 )
 
 
-def index_repository(github_url: str) -> None:
+def analyze_repository(
+    github_url: str,
+) -> None:
     """
-    Clone and index the GitHub repository.
+    Clone, process, and index a GitHub repository.
     """
 
+    # ---------------------------------------------------------
+    # Clone Repository
+    # ---------------------------------------------------------
     repo_path = clone_repository(github_url)
 
     print(f"\nRepository Path: {repo_path}")
 
+    # ---------------------------------------------------------
+    # Scan Repository
+    # ---------------------------------------------------------
     files = scan_repository(repo_path)
 
     print(f"Total Source Files: {len(files)}")
 
+    # ---------------------------------------------------------
+    # Clear Previous Embeddings
+    # ---------------------------------------------------------
     clear_collection()
 
+    # ---------------------------------------------------------
+    # Index Repository
+    # ---------------------------------------------------------
     indexed_files = 0
 
     for file in files:
@@ -53,44 +66,3 @@ def index_repository(github_url: str) -> None:
         print(f"Indexed {indexed_files}: {file}")
 
     print("\nRepository indexing completed.")
-
-
-def chat() -> None:
-    """
-    Interactive question-answering loop.
-    """
-
-    print("\nRepository is ready.")
-    print("Type 'exit' to quit.\n")
-
-    while True:
-
-        question = input("Ask a question: ").strip()
-
-        if question.lower() == "exit":
-            print("\nGoodbye!")
-            break
-
-        if not question:
-            continue
-
-        answer = ask_question(question)
-
-        print("\n" + "=" * 80)
-        print("ANSWER")
-        print("=" * 80)
-        print(answer)
-        print()
-
-
-def main():
-
-    github_url = "https://github.com/langchain-ai/langchain.git"
-
-    index_repository(github_url)
-
-    chat()
-
-
-if __name__ == "__main__":
-    main()
