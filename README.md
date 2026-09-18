@@ -236,7 +236,7 @@ Coming Soon
 
 ## Author
 
-**Beeru**
+**Vivek kumar adile**
 
 B.Tech Electronics & Computer Engineering
 
